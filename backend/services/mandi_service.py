@@ -1,0 +1,55 @@
+from services.mandi_ai_service import generate_mandi_insight
+import requests
+
+GOV_API_URL = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
+API_KEY = "579b464db66ec23bdd000001cdd3946e4ce4a4a5472e5c4c4c4c4c4c"
+
+def get_market_prices(state="Karnataka", crop=None):
+    try:
+        params = {
+            "api-key": API_KEY,
+            "format": "json",
+            "limit": "100",
+            "filters[state]": state
+        }
+
+        if crop:
+            params["filters[commodity]"] = crop
+
+        res = requests.get(GOV_API_URL, params=params, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+
+        records = data.get("records", [])
+        prices = []
+
+        for r in records:
+            prices.append({
+                "crop": r.get("commodity"),
+                "market": r.get("market"),
+                "district": r.get("district"),
+                "price": float(r.get("modal_price", 0))
+            })
+
+        insight = generate_mandi_insight(prices, state)
+
+        return {
+            "source": "government_api",
+            "prices": prices[:20],
+            "ai_insight": insight
+        }
+
+    except Exception:
+        fallback_prices = [
+            {"crop": "Onion", "market": "Bangalore", "district": "Bangalore Urban", "price": 2600},
+            {"crop": "Tomato", "market": "Kolar", "district": "Kolar", "price": 1900},
+            {"crop": "Potato", "market": "Mysore", "district": "Mysore", "price": 1200}
+        ]
+
+        insight = generate_mandi_insight(fallback_prices, state)
+
+        return {
+            "source": "fallback",
+            "prices": fallback_prices,
+            "ai_insight": insight
+        }
