@@ -69,3 +69,14 @@ body {
 
 .animate-delay-1 { animation-delay: 0.2s; }
 .animate-delay-2 { animation-delay: 0.4s; }
+.input {
+  @apply p-3 rounded-xl border focus:ring-2 focus:ring-green-400;
+}
+/* subtle fade-up used on headings (optional) */
+@keyframes fadeUp {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.animate-fadeUp {
+  animation: fadeUp 450ms ease both;
+}

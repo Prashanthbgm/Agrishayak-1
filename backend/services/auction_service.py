@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-# In-memory storage (same as your old backend, but clean)
+# In-memory storage
 auctions_db = {}
 bids_db = {}
 auction_counter = 1
@@ -42,13 +42,11 @@ def create_auction(data):
 
 def get_active_auctions():
     result = []
-
     for auc in auctions_db.values():
         if auc["status"] == "active":
             auc_copy = auc.copy()
             auc_copy["bid_count"] = len(bids_db.get(auc["auction_id"], []))
             result.append(auc_copy)
-
     return result
 
 
@@ -68,7 +66,6 @@ def place_bid(auction_id, data):
     if bid_amount <= auction["highest_bid"]:
         return {"error": "Bid must be higher than current highest bid"}
 
-    # Time check
     if datetime.now() > datetime.fromisoformat(auction["end_time"]):
         auction["status"] = "closed"
         return {"error": "Auction ended"}
@@ -106,7 +103,10 @@ def get_admin_connections():
             "bidder_contact": highest_bid["bidder_contact"],
             "highest_bid": highest_bid["bid_amount"]
         })
-        
+
+    return connections   # ✅ REQUIRED
+
+
 def accept_highest_bid(auction_id):
     if auction_id not in auctions_db:
         return {"error": "Auction not found"}
@@ -132,5 +132,3 @@ def accept_highest_bid(auction_id):
         "amount_to_pay": highest_bid["bid_amount"],
         "bidder": highest_bid["bidder_name"]
     }
-
-    return connections
